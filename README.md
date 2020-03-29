@@ -1,2 +1,2 @@
 # Clustering-Algorithms
-This repo contains clustering algorithms in Python
+Hierarchical clustering algoririthm in Python.
