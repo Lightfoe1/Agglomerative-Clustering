@@ -1,2 +1,2 @@
 # Clustering-Algorithms
-Hierarchical clustering algoririthm in Python.
+Hierarchical clustering algorithm in Python.
