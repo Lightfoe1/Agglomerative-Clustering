@@ -2,7 +2,6 @@ import math
 import random
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 
 # The array where our clusters will be stored
 clusterArray = []
