@@ -8,3 +8,4 @@ Hierarchical clustering algorithm that uses no libraries for the calculation par
 - utility_functions include functions used for functional_functions
 
 - To run, download modules, open main.py and execute
+- Requirements: matplotlib
