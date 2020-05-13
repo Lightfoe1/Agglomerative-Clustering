@@ -44,3 +44,5 @@ def delete_indexes(deletion_array, index_array):
         index = index_array[reverse_counter]
         deletion_array.pop(index)
         reverse_counter -= 1
+
+    return deletion_array

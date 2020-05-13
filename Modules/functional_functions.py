@@ -3,7 +3,7 @@ The functions here do the clustering process and displaying data
 '''
 import random
 import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d # pylint: disable=unused-import
+import mpl_toolkits.mplot3d
 from class_definitions import (ThreeDimensionalPoint, Cluster)
 from utility_functions import (calculate_distance, delete_indexes)
 # 3: Functional Functions
@@ -35,11 +35,21 @@ def display_image(display_data, color):
     color               -- color of the points on image(blue,black,red,yellow...)
     depth_shade         -- True for normal image
     '''
-    # Check if input is valid
-    if(not isinstance(display_data[0], Cluster)
-       and not isinstance(display_data, Cluster)
-       and not isinstance(display_data, ThreeDimensionalPoint)):
-        raise TypeError("Only a point or a cluster can be displayed!(display_image)")
+    # Check display data
+    if isinstance(display_data, list) and len(display_data) == 0:
+        raise ValueError("No data to be displayed!(display_image)")
+    if not isinstance(display_data, Cluster):
+        for item in display_data:
+            if not isinstance(item, Cluster):
+                raise TypeError("Corrupt cluster!(display_image)")
+    else:
+        for item in display_data:
+            if not isinstance(item, ThreeDimensionalPoint):
+                raise TypeError("Corrupt cluster!(display_image)")
+    # Check color
+    if not isinstance(color, str):
+        raise TypeError(" Color must be a string!(display_image)")
+
     # If the data is raw data, treat it as a cluster and plot it
     if isinstance(display_data, Cluster):
         display_data.display_cluster(color, 1)
@@ -47,57 +57,72 @@ def display_image(display_data, color):
     elif isinstance(display_data[0], Cluster):
         for item in display_data:
             item.display_cluster(color, 1)
-    # If the data is a point, plot it
-    elif isinstance(display_data, ThreeDimensionalPoint):
-        display_data.print_point(color, 1)
     # Display image
     plt.show()
 
-def print_clusters(cluster_array_function):
+def print_clusters(print_data):
     '''
     Prints clusters
-    cluster_array_function -- the array which stores the clusters that will be printed
+    print_data -- the array which stores the clusters that will be printed
     '''
-    if (not isinstance(cluster_array_function, list)
-            or not isinstance(cluster_array_function[0], Cluster)):
-        raise TypeError("Invalid Input!(print_clusters)")
-    if len(cluster_array_function) <= 0:
+    if not isinstance(print_data, list):
+        raise TypeError("print_data must be a list!(print_clusters)")
+    if len(print_data) == 0:
         raise ValueError(
-            "Cluster cannot be printed because there are none!(print_clusters)")
-    for cluster in cluster_array_function:
+            "Print data is empty!(print_clusters)")
+    for cluster in print_data:
+        if not isinstance(cluster, Cluster):
+            raise TypeError("print_data must only contain clusters!(print_clusters)")
+        for point in cluster:
+            if not isinstance(point, ThreeDimensionalPoint):
+                raise TypeError("Corrupt cluster!(print_clusters)")
+
+    for cluster in print_data:
         cluster.print_cluster()
 
-def create_double_clusters(data_array_function, cluster_array_function, max_clustering_distance):
+def create_double_clusters(data_array, cluster_array, max_clustering_distance):
     '''
     Creates clusters with size two
-    data_array_function     -- The raw data that will be clustered
-    cluster_array_function  -- The clusters will be stored here
+    data_array     -- The raw data that will be clustered
+    cluster_array  -- The clusters will be stored here
     max_clustering_distance -- The maximum distance between two points that will be clustered
     '''
-    # Check if the inputs are valid
-    if (not isinstance(data_array_function, list)
-            or not isinstance(cluster_array_function, list)):
-        print("No data or only one point(create_double_clusters)")
-        raise TypeError("Incorrect type of input!(create_double_clusters)")
-    if len(data_array_function) <= 1:
-        raise ValueError(
-            "At least two points are needed in order to create a cluster!(create_double_clusters)")
+    # Check data_array
+    if isinstance(data_array, Cluster):
+        if len(data_array) <= 1:
+            raise ValueError(
+                "There are less than 2 points!(create_double_clusters)")
+        for point in data_array:
+            if not isinstance(point, ThreeDimensionalPoint):
+                raise TypeError("data_array must only contain points!(create_double_clusters)")
+    else:
+        raise TypeError("data_array must be a cluster!(create_double_clusters)")
+    # Check cluster array
+    if isinstance(cluster_array, list):
+        if len(cluster_array) >= 1:
+            raise ValueError("Cluster array must be empty!(create_double_clusters)")
+    else:
+        raise TypeError("Cluster array must be a list!(create_double_clusters)")
+    # Check max_clustering_distance
+    if not isinstance(max_clustering_distance, int):
+        raise TypeError("max_clustering distance must be int(create_double_clusters)")
+
 
     index_array = []
-    for counter_one in range(len(data_array_function)):
+    for counter_one in range(len(data_array)):
         # If counter_one is already in a cluster, continue
         if counter_one in index_array:
             continue
         # Initialize the minimum distance to compare
         min_distance = max_clustering_distance
         # first_point
-        point_one = data_array_function[counter_one]
-        for counter_two in range(counter_one + 1, len(data_array_function)):
+        point_one = data_array[counter_one]
+        for counter_two in range(counter_one + 1, len(data_array)):
             # If t is already in a cluster, continue
             if counter_two in index_array:
                 continue
             # second_point
-            point_two = data_array_function[counter_two]
+            point_two = data_array[counter_two]
             # Calculate distance between first_point and second_point
             distance = calculate_distance(point_one, point_two)
             # Check to see if it is the shortest possible distance
@@ -109,41 +134,59 @@ def create_double_clusters(data_array_function, cluster_array_function, max_clus
         if min_distance < max_clustering_distance:
             # 1:Take second point. 2: make first_point and second_point into a cluster.
             # 3: add this cluster to the cluster array
-            point_two = data_array_function[index_second_point]
+            point_two = data_array[index_second_point]
             temporary_cluster = Cluster()
             temporary_cluster.append(point_one)
             temporary_cluster.append(point_two)
-            cluster_array_function.append(temporary_cluster)
+            cluster_array.append(temporary_cluster)
             # Save the indexes of both points in order to delete them once everything is finished
             index_array.append(counter_one)
             index_array.append(index_second_point)
     # Delete indexes from raw data if there are indexes to be deleted
     if index_array:
-        delete_indexes(data_array_function, index_array)
+        data_array = delete_indexes(data_array, index_array)
 
-def add_to_clusters(data_array_function, cluster_array_function, max_adding_distance):
+def add_to_clusters(data_array, cluster_array, max_adding_distance):
     '''
     Adds the leftover points to clusters
-    data_array_function    -- The leftover data
-    cluster_array_function -- The clusters to where points will be added
+    data_array    -- The leftover data
+    cluster_array -- The clusters to where points will be added
     max_adding_distance    -- The maximum distance for adding points to clusters
     '''
-    # Check if the inputs are valid
-    if (not isinstance(data_array_function, Cluster)
-            or not isinstance(cluster_array_function, list)
-            or not isinstance(max_adding_distance, int)):
-        raise TypeError("Input type wrong!(add_to_clusters)")
+    # Tests:
+    # Check data array
+    if isinstance(data_array, Cluster):
+        if len(data_array) == 0:
+            raise ValueError("Data array empty!(add_to_clusters)")
+        for item in data_array:
+            if not isinstance(item, ThreeDimensionalPoint):
+                raise TypeError("Data array must contain only points!(add_to_clusters)")
+    else:
+        raise TypeError("Data array is not a cluster!(add_to_clusters)")
+    # Check cluster array
+    if isinstance(cluster_array, list):
+        if len(cluster_array) == 0:
+            raise ValueError("Cluster array is empty!(add_to_clusters)")
+        for cluster in cluster_array:
+            if not isinstance(cluster, Cluster):
+                raise TypeError("Cluster array must contain only clusters!(add_to_clusters)")
+            for point in cluster:
+                if not isinstance(point, ThreeDimensionalPoint):
+                    raise TypeError("Clusters must contain only points!(add_to_clusters)")
+    else:
+        raise TypeError("Cluster array is not a list!(add_to_clusters)")
+    # Check max adding distance
+    if not isinstance(max_adding_distance, int):
+        raise TypeError("max_adding_distance is not int!(add_to_clusters)")
 
-    if len(data_array_function) == 0:
-        raise ValueError("Input value wrong!(add_to_clusters)")
-
+    # Actual function:
     index_array = []
     # Take an unclustered member
-    for i in range(len(data_array_function)):
+    for i in range(len(data_array)):
         # first_point
-        point_one = data_array_function[i]
+        point_one = data_array[i]
         # Take a cluster
-        for cluster in cluster_array_function:
+        for cluster in cluster_array:
             # Take every member of the cluster
             for point_two in cluster:
                 # Calculate distance between first_point and second_point
@@ -160,37 +203,45 @@ def add_to_clusters(data_array_function, cluster_array_function, max_adding_dist
             break
     # Delete the used points from raw data
     if index_array:
-        delete_indexes(data_array_function, index_array)
+        data_array = delete_indexes(data_array, index_array)
 
-def merge_clusters(cluster_array_function, max_merging_distance):
+def merge_clusters(cluster_array, max_merging_distance):
     '''
     Merges clusters until they can't be merged anymore
-    cluster_array_function -- The clusters that will be merged
+    cluster_array -- The clusters that will be merged
     max_merging_distance   -- The maximum distance in which the clusters will be merged
     '''
 
 
-    # Check the inputs
-    if (not isinstance(cluster_array_function, list)
-            or not isinstance(max_merging_distance, int)):
-        raise TypeError(
-            "Incorrect type of input!(merge_clusters)")
-    if len(cluster_array_function) < 2:
-        raise ValueError(
-            "No data to be merged!(merge_clusters)")
+    # Check cluster_array
+    if isinstance(cluster_array, list):
+        if len(cluster_array) <= 1:
+            raise ValueError("Cluster array is empty or has 1 item!(merge_clusters)")
+        for cluster in cluster_array:
+            if not isinstance(cluster, Cluster):
+                raise TypeError("Cluster array must contain clusters!(merge_clusters)")
+            for point in cluster:
+                if not isinstance(point, ThreeDimensionalPoint):
+                    raise TypeError("Corrupt cluster!(merge_clusters)")
+    else:
+        raise TypeError("cluster_array must be a list!(merge_clusters)")
+    # Check max_merging_distance
+    if not isinstance(max_merging_distance, int):
+        raise TypeError("max_merging_distance must be int!(merge_clusters)")
+
     # This code will run until there are no changes made to the cluster array
     while True:
-        cluster_array_function_temporary = []
+        cluster_array_temporary = []
         index_array = []
         # Take cluster1
-        for counter_one in range(len(cluster_array_function)):
+        for counter_one in range(len(cluster_array)):
             #Take first cluster
-            cluster_one = cluster_array_function[counter_one]
+            cluster_one = cluster_array[counter_one]
             # Take first_point
             for first_point in cluster_one:
                 # Start from next index to avoid comparing with itself Take cluster2
-                for counter_two in range(counter_one + 1, len(cluster_array_function)):
-                    cluster_two = cluster_array_function[counter_two]
+                for counter_two in range(counter_one + 1, len(cluster_array)):
+                    cluster_two = cluster_array[counter_two]
                     # Take second_point
                     for second_point in cluster_two:
                         # Calculate the distance
@@ -201,7 +252,7 @@ def merge_clusters(cluster_array_function, max_merging_distance):
                             temporary_cluster = Cluster()
                             temporary_cluster.extend(cluster_one)
                             temporary_cluster.extend(cluster_two)
-                            cluster_array_function_temporary.append(temporary_cluster)
+                            cluster_array_temporary.append(temporary_cluster)
                             index_array.append(counter_one)
                             index_array.append(counter_two)
                             break
@@ -215,37 +266,52 @@ def merge_clusters(cluster_array_function, max_merging_distance):
                 continue
             break
         if index_array:
-            delete_indexes(cluster_array_function, index_array)
-            cluster_array_function.extend(cluster_array_function_temporary)
+            cluster_array = delete_indexes(cluster_array, index_array)
+            cluster_array.extend(cluster_array_temporary)
         else:
             break
 
-def clear_small_clusters(data_array_function, cluster_array_function, min_cluster_size):
+def clear_small_clusters(data_array, cluster_array, min_cluster_size):
     '''
     Clears out small clusters
-    data_array_function    -- The cleared clusters will be added back to the raw data
-    cluster_array_function -- The clusters which will be checked
+    data_array    -- The cleared clusters will be added back to the raw data
+    cluster_array -- The clusters which will be checked
     min_cluster_size       -- The minimum size for clusters
     '''
-    # Check the inputs
-    if (not isinstance(cluster_array_function, list)
-            or not isinstance(cluster_array_function[0], Cluster)
-            or not isinstance(data_array_function, Cluster)
-            or not isinstance(min_cluster_size, int)):
-        raise TypeError("Incorrect input!(clear_small_clusters)")
-    if len(cluster_array_function) <= 0:
-        raise ValueError("No data to be deleted!(clear_small_clusters)")
+    # Check data array
+    if isinstance(data_array, Cluster):
+        if len(data_array) >= 1:
+            for item in data_array:
+                if not isinstance(item, ThreeDimensionalPoint):
+                    raise TypeError("Data array must contain only points!(add_to_clusters)")
+    else:
+        raise TypeError("Data array is not a cluster!(add_to_clusters)")
+    # Check cluster array
+    if isinstance(cluster_array, list):
+        if len(cluster_array) == 0:
+            raise ValueError("Cluster array is empty!(add_to_clusters)")
+        for cluster in cluster_array:
+            if not isinstance(cluster, Cluster):
+                raise TypeError("Cluster array must contain only clusters!(add_to_clusters)")
+            for point in cluster:
+                if not isinstance(point, ThreeDimensionalPoint):
+                    raise TypeError("Clusters must contain only points!(add_to_clusters)")
+    else:
+        raise TypeError("Cluster array is not a list!(add_to_clusters)")
+    # Check min_cluster_size
+    if not isinstance(min_cluster_size, int):
+        raise TypeError("min_cluster_size must be int!(clear_small_clusters)")
+
 
     index_array = []
-    for counter_1 in range(len(cluster_array_function)):
+    for counter_1 in range(len(cluster_array)):
         # If the cluster is small add the points back to the raw data
-        if len(cluster_array_function[counter_1]) <= min_cluster_size:
+        if len(cluster_array[counter_1]) <= min_cluster_size:
             index_array.append(counter_1)
-            for point in cluster_array_function[counter_1]:
+            for point in cluster_array[counter_1]:
                 # Add back to raw data because we don't want any data loss
-                data_array_function.append(point)
+                data_array.append(point)
 
     # Delete indexes from cluster_array
     if index_array:
-        delete_indexes(cluster_array_function, index_array)
-    return 0
+        cluster_array = delete_indexes(cluster_array, index_array)

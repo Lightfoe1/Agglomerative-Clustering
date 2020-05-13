@@ -2,11 +2,9 @@
 - Neccessary imports for clustering
 - An example of creating data, clustering it and displaying this data
 '''
-
-
-from functional_functions import (clear_small_clusters, create_double_clusters,
-                                  merge_clusters, add_to_clusters, randomize_3d_points,
-                                  display_image, print_clusters)
+from functional_functions import (randomize_3d_points, display_image, print_clusters,
+                                  create_double_clusters, add_to_clusters, merge_clusters,
+                                  clear_small_clusters)
 
 # Initialize global variable
 cluster_array = []
