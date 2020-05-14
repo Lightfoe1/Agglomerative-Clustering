@@ -21,15 +21,15 @@ if data_array:
     display_image(data_array, 'black')
 
 # Create clusters with size 2
-create_double_clusters(data_array, cluster_array, 10)
+create_double_clusters(data_array, cluster_array, 15)
 
 # If there are any leftover data, add them to the clusters
 if data_array:
-    add_to_clusters(data_array, cluster_array, 10)
+    add_to_clusters(data_array, cluster_array, 15)
 
 # Merge the clusters if there are more than 1
 if len(cluster_array) > 1:
-    merge_clusters(cluster_array, 10)
+    merge_clusters(cluster_array, 15)
 
 # Clear small clusters if there are any
 if cluster_array:
